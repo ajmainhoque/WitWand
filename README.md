@@ -1,73 +1,121 @@
-# React + TypeScript + Vite
+# WitWand
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A competitive coding battle game where two players solve programming challenges in real-time to power up their wizards and cast spells. Built for [Hopper Hacks 2026](https://hopperhacks.org/).
 
-Currently, two official plugins are available:
+**Play now at [witwand.xyz](https://witwand.xyz/)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![WitWand Title Screen](public/title.png)
 
-## React Compiler
+## How It Works
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Choose your language** — JavaScript, Python, C, C++, or Java
+2. **Pick your wizards** — Each player selects 2 characters from 6 unique wizards
+3. **Solve coding problems** — Both players race to solve algorithmic challenges simultaneously
+4. **Cast spells in combat** — Correct solutions award mana to fuel your spells and abilities
+5. **Win the duel** — Defeat your opponent's characters to claim victory
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Turn-based RPG combat** with coding puzzles as the core mechanic
+- **6 playable characters** — Harry, Hermione, Ron, Voldemort, Hagrid, and Bellatrix — each with unique spells and items
+- **5 supported languages** — JavaScript, Python, C, C++, Java
+- **Real-time code execution** — JavaScript runs in Web Workers, Python via Pyodide WASM, and C/C++/Java via the Piston API
+- **Status effects** — Poison, Bleed, Stun, Shield, Dodge, and more
+- **Retro pixel-art UI** with animations and sound effects
+- **AI-powered debugging** — "Why?" button explains errors using LLM
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TypeScript, Vite |
+| Code Editor | CodeMirror (via @uiw/react-codemirror) |
+| Code Execution | Web Workers, Pyodide WASM, Piston API |
+| Backend | Express (API proxying + static serving) |
+| LLM Fallback | Snowflake Cortex (Llama 3.1-405B) |
+| Styling | CSS with pixel-art theme, Press Start 2P font |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- npm
+
+### Installation
+
+```bash
+git clone https://github.com/ajmainhoque/hopper-hacks-2026.git
+cd hopper-hacks-2026
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Starts the Vite dev server with hot module replacement.
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+Builds the app and starts the Express server on port `8080` (or `$PORT`).
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Piston API for C/C++/Java code execution
+PISTON_URL=<your-piston-instance-url>
+
+# Snowflake Cortex for LLM fallback
+VITE_SNOWFLAKE_ACCOUNT_URL=<your-snowflake-account-url>
+VITE_SNOWFLAKE_PAT=<your-snowflake-pat>
+VITE_SNOWFLAKE_MODEL=llama3.1-405b
+```
+
+> JavaScript and Python execution works in-browser without any environment variables. The Piston API and Snowflake Cortex are only needed for C/C++/Java execution and the AI debugging feature.
+
+## Project Structure
+
+```
+src/
+├── screens/        # Title, Character Select, Battle, Victory screens
+├── components/     # UI components (BattleField, CodingEditor, ActionPanel, etc.)
+├── engine/         # Game logic (combat, turns, characters, status effects)
+├── coding/         # Code execution (runners, problem cache, test validation)
+├── hooks/          # React hooks (game state, coding phase, timer)
+├── audio/          # Background music and sound effects
+├── styles/         # CSS theme, pixel-art styles, animations
+└── assets/         # Character sprites and visual effects
+```
+
+## Game Flow
+
+```
+Title Screen → Character Select → Battle Loop → Victory Screen
+                                      ↓
+                              ┌───────────────┐
+                              │ Coding Phase   │ ← Both players solve problems
+                              │ (120-180s)     │
+                              └───────┬───────┘
+                                      ↓
+                              ┌───────────────┐
+                              │ Action Phase   │ ← Characters cast spells/use items
+                              │ (30s per turn) │
+                              └───────┬───────┘
+                                      ↓
+                                 Loop until
+                               a team falls
+```
+
+## License
+
+This project was built for Hopper Hacks 2026.
