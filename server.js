@@ -28,17 +28,6 @@ app.use(
   }),
 );
 
-// Proxy /api/piston-public → public EMKC Piston API (for languages not on self-hosted)
-app.use(
-  '/api/piston-public',
-  createProxyMiddleware({
-    target: 'https://emkc.org',
-    changeOrigin: true,
-    pathRewrite: { '^/api/piston-public': '/api/v2/piston' },
-    secure: true,
-  }),
-);
-
 // Proxy /api/piston → Piston code execution API
 app.use(
   '/api/piston',
