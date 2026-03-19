@@ -14,30 +14,26 @@ const SNOWFLAKE_URL =
 // Piston API URL — set PISTON_URL to your self-hosted Droplet, e.g. http://<DROPLET_IP>:2000
 const PISTON_URL = process.env.PISTON_URL || 'https://emkc.org';
 const pistonRewrite = PISTON_URL.includes('emkc.org')
-  ? { '^/': '/api/v2/piston/' }
-  : { '^/': '/api/v2/' };
+  ? { '^/api/piston': '/api/v2/piston' }
+  : { '^/api/piston': '/api/v2' };
 
 // Proxy /api/snowflake → Snowflake Cortex
-app.use(
-  '/api/snowflake',
-  createProxyMiddleware({
-    target: SNOWFLAKE_URL,
-    changeOrigin: true,
-    pathRewrite: { '^/api/snowflake': '' },
-    secure: true,
-  }),
-);
+app.use(createProxyMiddleware({
+  pathFilter: '/api/snowflake',
+  target: SNOWFLAKE_URL,
+  changeOrigin: true,
+  pathRewrite: { '^/api/snowflake': '' },
+  secure: true,
+}));
 
 // Proxy /api/piston → Piston code execution API
-app.use(
-  '/api/piston',
-  createProxyMiddleware({
-    target: PISTON_URL,
-    changeOrigin: true,
-    pathRewrite: pistonRewrite,
-    secure: PISTON_URL.startsWith('https'),
-  }),
-);
+app.use(createProxyMiddleware({
+  pathFilter: '/api/piston',
+  target: PISTON_URL,
+  changeOrigin: true,
+  pathRewrite: pistonRewrite,
+  secure: PISTON_URL.startsWith('https'),
+}));
 
 // Serve static build output
 app.use(express.static(join(__dirname, 'dist')));
