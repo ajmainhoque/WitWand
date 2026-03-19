@@ -20,42 +20,6 @@ interface PistonResponse {
 const SENTINEL_START = '===PISTON_RESULT_START===';
 const SENTINEL_END = '===PISTON_RESULT_END===';
 
-// ---------------------------------------------------------------------------
-// Ensure Piston runtimes are installed (self-hosted)
-// ---------------------------------------------------------------------------
-
-const installedRuntimes = new Set<string>();
-let runtimesChecked = false;
-
-async function ensureRuntimeInstalled(language: string, version: string): Promise<void> {
-  const key = `${language}@${version}`;
-  if (installedRuntimes.has(key)) return;
-
-  if (!runtimesChecked) {
-    try {
-      const resp = await fetch('/api/piston/runtimes');
-      if (resp.ok) {
-        const runtimes = await resp.json() as { language: string; version: string }[];
-        for (const rt of runtimes) installedRuntimes.add(`${rt.language}@${rt.version}`);
-        runtimesChecked = true;
-      }
-    } catch { /* ignore */ }
-  }
-
-  if (installedRuntimes.has(key)) return;
-
-  // Runtime not installed — install it via Piston packages API
-  try {
-    const resp = await fetch('/api/piston/packages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ language, version }),
-    });
-    if (resp.ok) {
-      installedRuntimes.add(key);
-    }
-  } catch { /* ignore — execute call will surface the real error */ }
-}
 
 // ---------------------------------------------------------------------------
 // Shared utilities
@@ -756,9 +720,6 @@ export async function executePiston(
     }
     return { passed: false, totalTests: tests.length, passedTests: 0, results: [], error: `Code wrapper error: ${err}` };
   }
-
-  // Ensure runtime is installed on self-hosted Piston
-  await ensureRuntimeInstalled(config.language, config.version);
 
   // Call Piston API
   let pistonResp: PistonResponse;
