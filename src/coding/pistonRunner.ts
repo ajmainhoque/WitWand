@@ -724,6 +724,8 @@ export async function executePiston(
   const pistonEndpoint = config.usePublicApi ? '/api/piston-public/execute' : '/api/piston/execute';
   let pistonResp: PistonResponse;
   try {
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 10000);
     const resp = await fetch(pistonEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -731,14 +733,17 @@ export async function executePiston(
         language: config.language,
         version: config.version,
         files: [{ name: config.fileName, content: fullCode }],
-        compile_timeout: 10000,
-        run_timeout: 5000,
+        compile_timeout: 5000,
+        run_timeout: 3000,
       }),
+      signal: controller.signal,
     });
+    clearTimeout(fetchTimeout);
     if (!resp.ok) throw new Error(`Piston HTTP ${resp.status}`);
     pistonResp = await resp.json();
   } catch (err) {
-    return { passed: false, totalTests: tests.length, passedTests: 0, results: [], error: `Piston API error: ${err}` };
+    const msg = (err as Error).name === 'AbortError' ? 'Piston API timed out' : `Piston API error: ${err}`;
+    return { passed: false, totalTests: tests.length, passedTests: 0, results: [], error: msg };
   }
 
   // Check compilation errors
