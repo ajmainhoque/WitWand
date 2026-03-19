@@ -6,10 +6,10 @@ import { evaluateCodeWithGemini } from './geminiClient';
 // Piston API config
 // ---------------------------------------------------------------------------
 
-const PISTON_CONFIG: Record<string, { language: string; version: string; fileName: string }> = {
+const PISTON_CONFIG: Record<string, { language: string; version: string; fileName: string; usePublicApi?: boolean }> = {
   c:    { language: 'c',   version: '10.2.0',  fileName: 'main.c' },
   cpp:  { language: 'c++', version: '10.2.0',  fileName: 'main.cpp' },
-  java: { language: 'java', version: '15.0.2', fileName: 'Main.java' },
+  java: { language: 'java', version: '15.0.2', fileName: 'Main.java', usePublicApi: true },
 };
 
 interface PistonResponse {
@@ -720,10 +720,11 @@ export async function executePiston(
     return { passed: false, totalTests: tests.length, passedTests: 0, results: [], error: `Code wrapper error: ${err}` };
   }
 
-  // Call Piston API
+  // Call Piston API — use public EMKC API for languages not available on self-hosted
+  const pistonEndpoint = config.usePublicApi ? '/api/piston-public/execute' : '/api/piston/execute';
   let pistonResp: PistonResponse;
   try {
-    const resp = await fetch('/api/piston/execute', {
+    const resp = await fetch(pistonEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -737,9 +738,7 @@ export async function executePiston(
     if (!resp.ok) throw new Error(`Piston HTTP ${resp.status}`);
     pistonResp = await resp.json();
   } catch (err) {
-    // Piston API unavailable (public API is whitelist-only since 2/15/2026) — fall back to LLM evaluation
-    console.warn(`Piston API unavailable (${err}), falling back to LLM evaluation`);
-    return executeFallbackLLM(userCode, problem, language, tests);
+    return { passed: false, totalTests: tests.length, passedTests: 0, results: [], error: `Piston API error: ${err}` };
   }
 
   // Check compilation errors

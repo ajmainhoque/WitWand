@@ -33,6 +33,12 @@ export default defineConfig(({ mode }) => {
           rewrite: (path: string) => path.replace(/^\/api\/snowflake/, ''),
           secure: true,
         },
+        '/api/piston-public': {
+          target: 'https://emkc.org',
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/api\/piston-public/, '/api/v2/piston'),
+          secure: true,
+        },
         '/api/piston': {
           target: env.PISTON_URL || 'https://emkc.org',
           changeOrigin: true,
