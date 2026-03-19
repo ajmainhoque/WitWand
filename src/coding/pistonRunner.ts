@@ -733,8 +733,8 @@ export async function executePiston(
         language: config.language,
         version: config.version,
         files: [{ name: config.fileName, content: fullCode }],
-        compile_timeout: 5000,
-        run_timeout: 3000,
+        compile_timeout: 10000,
+        run_timeout: 5000,
       }),
       signal: controller.signal,
     });
